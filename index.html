@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Resume Parser</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f3f4f6;
+      padding: 40px;
+    }
+
+    .box {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    textarea, input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      background: black;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h2>Simple Resume Parser</h2>
+
+    <textarea id="resume" rows="10" placeholder="Paste resume here"></textarea>
+
+    <button onclick="extractDetails()">Extract Details</button>
+
+    <h3>Candidate Details</h3>
+
+    <input id="name" placeholder="Full Name">
+    <input id="email" placeholder="Email Address">
+    <input id="phone" placeholder="Phone Number">
+    <input id="title" placeholder="Current Job Title">
+    <input id="company" placeholder="Current Company">
+  </div>
+
+  <script>
+    function extractDetails() {
+      const text = document.getElementById('resume').value;
+
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+
+      const emailMatch = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+      const phoneMatch = text.match(/(\+?\d[\d\s-]{7,})/);
+
+      document.getElementById('name').value = lines[0] || '';
+      document.getElementById('title').value = lines[1] || '';
+      document.getElementById('company').value = lines[2] || '';
+      document.getElementById('email').value = emailMatch ? emailMatch[0] : '';
+      document.getElementById('phone').value = phoneMatch ? phoneMatch[0] : '';
+    }
+  </script>
+</body>
+</html>
