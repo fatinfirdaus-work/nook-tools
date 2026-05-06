@@ -3,11 +3,12 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Simple Resume Parser</title>
+  <title>Resume Parser</title>
 
   <style>
+
     body {
       font-family: Arial, sans-serif;
       background: #f3f4f6;
@@ -15,12 +16,12 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: auto;
       background: white;
-      padding: 30px;
+      padding: 32px;
       border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
     h1 {
@@ -29,7 +30,7 @@
 
     textarea {
       width: 100%;
-      height: 280px;
+      height: 300px;
       padding: 16px;
       border-radius: 12px;
       border: 1px solid #ccc;
@@ -70,17 +71,21 @@
       border: 1px solid #ccc;
       font-size: 14px;
     }
+
   </style>
+
 </head>
 
 <body>
 
   <div class="container">
 
-    <h1>Simple Resume Parser</h1>
+    <h1>Resume Parser Tool</h1>
 
-    <textarea id="resume"
-      placeholder="Paste candidate resume here..."></textarea>
+    <textarea
+      id="resume"
+      placeholder="Paste candidate resume here..."
+    ></textarea>
 
     <button onclick="extractDetails()">
       Extract Candidate Details
@@ -113,15 +118,47 @@
       <input id="company" />
     </div>
 
+    <div class="field">
+      <label>Location</label>
+      <input id="location" />
+    </div>
+
+    <div class="field">
+      <label>Years of Experience</label>
+      <input id="experience" />
+    </div>
+
+    <div class="field">
+      <label>Notice Period</label>
+      <input id="notice" />
+    </div>
+
+    <div class="field">
+      <label>Salary Expectation</label>
+      <input id="salary" />
+    </div>
+
+    <div class="field">
+      <label>Languages</label>
+      <input id="languages" />
+    </div>
+
+    <div class="field">
+      <label>Skills</label>
+      <input id="skills" />
+    </div>
+
   </div>
 
   <script>
 
     function cleanSpacing(text) {
+
       return text
         .replace(/\s{2,}/g, ' ')
         .replace(/([A-Z])\s(?=[A-Z])/g, '$1')
         .trim();
+
     }
 
     function extractDetails() {
@@ -135,119 +172,187 @@
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
-      let fullName = '';
-      let email = '';
-      let phone = '';
-      let currentTitle = '';
-      let currentCompany = '';
+      // =========================
+      // FULL NAME
+      // =========================
 
-      // NAME
-      fullName = lines[0] || '';
+      const fullName = lines[0] || '';
 
+      // =========================
       // EMAIL
+      // =========================
+
       const emailMatch = cleanedText.match(
         /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
       );
 
-      if (emailMatch) {
-        email = emailMatch[0];
-      }
+      const email = emailMatch ? emailMatch[0] : '';
 
+      // =========================
       // PHONE
+      // =========================
+
       const phoneMatch = cleanedText.match(
         /(\+\d{1,3}[\s-]?\d{4,}[\d\s-]*)/
       );
 
-      if (phoneMatch) {
-        phone = phoneMatch[0];
+      const phone = phoneMatch ? phoneMatch[0] : '';
+
+      // =========================
+      // CURRENT JOB TITLE + COMPANY
+      // =========================
+
+      let currentTitle = '';
+      let currentCompany = '';
+
+      const roleRegex =
+        /([A-Za-z&\-\s]+(?:Manager|Executive|Specialist|Director|Lead|Consultant|Analyst|Head))\s*,\s*([A-Za-z0-9&\-\s\.]+)/;
+
+      const roleMatch = cleanedText.match(roleRegex);
+
+      if (roleMatch) {
+
+        currentTitle = cleanSpacing(roleMatch[1]);
+        currentCompany = cleanSpacing(roleMatch[2]);
+
       }
 
-      // JOB TITLE
-      const titleKeywords = [
-        'manager',
-        'specialist',
-        'executive',
-        'director',
-        'lead',
-        'consultant',
-        'analyst',
-        'partner',
-        'head'
+      // =========================
+      // LOCATION
+      // =========================
+
+      let location = '';
+
+      const locationMatch = cleanedText.match(
+        /([A-Za-z\s]+,\s*(Hong Kong|Malaysia|Singapore))/i
+      );
+
+      if (locationMatch) {
+
+        location = locationMatch[0];
+
+      }
+
+      // =========================
+      // YEARS OF EXPERIENCE
+      // =========================
+
+      let yearsExperience = '';
+
+      const yearsMatch = cleanedText.match(
+        /(\d+)\s+years?\s+of\s+experience/i
+      );
+
+      if (yearsMatch) {
+
+        yearsExperience = yearsMatch[1] + ' years';
+
+      }
+
+      // =========================
+      // NOTICE PERIOD
+      // =========================
+
+      let noticePeriod = '';
+
+      const noticeMatch = cleanedText.match(
+        /Immediately Available|1 Month|2 Months|3 Months/i
+      );
+
+      if (noticeMatch) {
+
+        noticePeriod = noticeMatch[0];
+
+      }
+
+      // =========================
+      // SALARY EXPECTATION
+      // =========================
+
+      let salary = '';
+
+      const salaryMatch = cleanedText.match(
+        /HK\$[\d,]+\/month\s*\+\s*Performance bonus/i
+      );
+
+      if (salaryMatch) {
+
+        salary = salaryMatch[0];
+
+      }
+
+      // =========================
+      // LANGUAGES
+      // =========================
+
+      let languages = [];
+
+      const languageKeywords = [
+        'Cantonese',
+        'English',
+        'Mandarin',
+        'Malay',
+        'Chinese'
       ];
 
-      for (let line of lines) {
+      languageKeywords.forEach(lang => {
 
-        const lower = line.toLowerCase();
+        if (cleanedText.includes(lang)) {
+
+          languages.push(lang);
+
+        }
+
+      });
+
+      // =========================
+      // SKILLS
+      // =========================
+
+      let skills = [];
+
+      const skillKeywords = [
+        'Salesforce',
+        'Strategic Partnerships',
+        'Business Development',
+        'B2B',
+        'B2B2C',
+        'CRM',
+        'P&L',
+        'Stakeholder Management',
+        'Campaign Management'
+      ];
+
+      skillKeywords.forEach(skill => {
 
         if (
-          titleKeywords.some(keyword =>
-            lower.includes(keyword)
-          )
+          cleanedText
+            .toLowerCase()
+            .includes(skill.toLowerCase())
         ) {
 
-          if (
-            !lower.includes('employment history') &&
-            !lower.includes('profile') &&
-            !lower.includes('education')
-          ) {
+          skills.push(skill);
 
-            currentTitle = cleanSpacing(line);
-            break;
-          }
         }
-      }
 
-      // CURRENT COMPANY
-      for (let line of lines) {
+      });
 
-        if (
-          line.includes(',') &&
-          !line.toLowerCase().includes('hong kong')
-        ) {
-
-          const parts = line.split(',');
-
-          if (parts.length >= 2) {
-
-            currentCompany = parts[1].trim();
-
-            break;
-          }
-        }
-      }
-
-      // Fallback company detection
-      if (!currentCompany) {
-
-        const companyKeywords = [
-          'Sdn',
-          'Ltd',
-          'Berhad',
-          'Inc',
-          'Group',
-          'Express',
-          'Telecom'
-        ];
-
-        for (let line of lines) {
-
-          if (
-            companyKeywords.some(keyword =>
-              line.includes(keyword)
-            )
-          ) {
-
-            currentCompany = line;
-            break;
-          }
-        }
-      }
+      // =========================
+      // FILL FIELDS
+      // =========================
 
       document.getElementById('name').value = fullName;
       document.getElementById('email').value = email;
       document.getElementById('phone').value = phone;
       document.getElementById('title').value = currentTitle;
       document.getElementById('company').value = currentCompany;
+      document.getElementById('location').value = location;
+      document.getElementById('experience').value = yearsExperience;
+      document.getElementById('notice').value = noticePeriod;
+      document.getElementById('salary').value = salary;
+      document.getElementById('languages').value = languages.join(', ');
+      document.getElementById('skills').value = skills.join(', ');
+
     }
 
   </script>
