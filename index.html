@@ -1,139 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced ATS Resume Parser</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      padding: 40px;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      background: white;
-      padding: 32px;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    textarea {
-      width: 100%;
-      height: 350px;
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-      font-size: 14px;
-      resize: vertical;
-    }
-
-    button {
-      background: black;
-      color: white;
-      border: none;
-      padding: 14px 22px;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-bottom: 30px;
-    }
-
-    .field {
-      margin-bottom: 18px;
-    }
-
-    .field label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .field input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <h1>Advanced ATS Resume Parser</h1>
-
-  <textarea id="resume" placeholder="Paste candidate resume here..."></textarea>
-
-  <button onclick="extractDetails()">
-    Parse Resume
-  </button>
-
-  <div class="field">
-    <label>Full Name</label>
-    <input id="name">
-  </div>
-
-  <div class="field">
-    <label>Email</label>
-    <input id="email">
-  </div>
-
-  <div class="field">
-    <label>Phone Number</label>
-    <input id="phone">
-  </div>
-
-  <div class="field">
-    <label>Current Job Title</label>
-    <input id="title">
-  </div>
-
-  <div class="field">
-    <label>Current Company</label>
-    <input id="company">
-  </div>
-
-  <div class="field">
-    <label>Location</label>
-    <input id="location">
-  </div>
-
-  <div class="field">
-    <label>Years of Experience</label>
-    <input id="experience">
-  </div>
-
-  <div class="field">
-    <label>Expected Salary</label>
-    <input id="salary">
-  </div>
-
-  <div class="field">
-    <label>Notice Period</label>
-    <input id="notice">
-  </div>
-
-  <div class="field">
-    <label>Languages</label>
-    <input id="languages">
-  </div>
-
-  <div class="field">
-    <label>Skills</label>
-    <input id="skills">
-  </div>
-
-</div>
-
 <script>
 
 function normalizeText(text) {
+
   return text
     .replace(/\r/g, '')
     .replace(/\t/g, ' ')
@@ -141,6 +9,7 @@ function normalizeText(text) {
     .replace(//g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim();
+
 }
 
 function extractDetails() {
@@ -166,10 +35,13 @@ function extractDetails() {
       line.length > 3 &&
       line.length < 60 &&
       !line.includes('@') &&
-      !line.match(/\d{4}/)
+      !line.match(/\d{4}/) &&
+      !line.toLowerCase().includes('page')
     ) {
+
       fullName = line;
       break;
+
     }
   }
 
@@ -208,11 +80,14 @@ function extractDetails() {
   ];
 
   for (let pattern of locationPatterns) {
+
     const match = text.match(pattern);
 
     if (match) {
+
       location = match[0];
       break;
+
     }
   }
 
@@ -232,8 +107,10 @@ function extractDetails() {
     const match = text.match(pattern);
 
     if (match) {
+
       experience = match[1] + '+ years';
       break;
+
     }
   }
 
@@ -248,7 +125,9 @@ function extractDetails() {
   );
 
   if (salaryMatch) {
+
     salary = salaryMatch[0];
+
   }
 
   // ========================
@@ -271,7 +150,9 @@ function extractDetails() {
       text.toLowerCase().includes(keyword.toLowerCase()) &&
       notice === ''
     ) {
+
       notice = keyword;
+
     }
 
   });
@@ -299,7 +180,9 @@ function extractDetails() {
       if (
         line.toLowerCase().includes(header)
       ) {
+
         employmentIndex = index;
+
       }
 
     });
@@ -312,8 +195,29 @@ function extractDetails() {
 
       const line = lines[i];
 
-      // Pattern 1
-      // Company (Title)
+      // Skip dates/pages/contracts
+      if (
+        line.match(/\d{4}/) ||
+        line.toLowerCase().includes('page') ||
+        line.toLowerCase().includes('permanent') ||
+        line.toLowerCase().includes('contract')
+      ) {
+
+        continue;
+
+      }
+
+      // Stop scanning when responsibilities begin
+      if (
+        line.toLowerCase().includes('responsibilities')
+      ) {
+
+        break;
+
+      }
+
+      // Pattern:
+      // Aspiro Sdn Bhd (HR Analyst)
 
       const bracketPattern = line.match(
         /(.*)\((.*)\)/
@@ -321,13 +225,18 @@ function extractDetails() {
 
       if (bracketPattern) {
 
-        currentCompany = bracketPattern[1].trim();
-        currentTitle = bracketPattern[2].trim();
+        currentCompany = bracketPattern[1]
+          .trim();
+
+        currentTitle = bracketPattern[2]
+          .trim();
+
         break;
+
       }
 
-      // Pattern 2
-      // Title, Company
+      // Pattern:
+      // HR Analyst, DHL Shared Services
 
       const commaPattern = line.match(
         /^(.+?),\s(.+)$/
@@ -338,24 +247,18 @@ function extractDetails() {
         !commaPattern[1].match(/\d{4}/)
       ) {
 
-        currentTitle = commaPattern[1].trim();
-        currentCompany = commaPattern[2].trim();
+        currentTitle = commaPattern[1]
+          .trim();
+
+        currentCompany = commaPattern[2]
+          .trim();
+
         break;
+
       }
 
-      // Pattern 3
-      // Separate lines
-
-      if (
-        i + 1 < lines.length &&
-        line.match(/Manager|Executive|Analyst|Specialist|Lead|Director/i)
-      ) {
-
-        currentTitle = line;
-        currentCompany = lines[i + 1];
-        break;
-      }
     }
+
   }
 
   // ========================
@@ -379,7 +282,9 @@ function extractDetails() {
     if (
       text.toLowerCase().includes(language.toLowerCase())
     ) {
+
       detectedLanguages.push(language);
+
     }
 
   });
@@ -416,7 +321,9 @@ function extractDetails() {
     if (
       text.toLowerCase().includes(skill.toLowerCase())
     ) {
+
       detectedSkills.push(skill);
+
     }
 
   });
@@ -436,9 +343,7 @@ function extractDetails() {
   document.getElementById('notice').value = notice;
   document.getElementById('languages').value = detectedLanguages.join(', ');
   document.getElementById('skills').value = detectedSkills.join(', ');
+
 }
 
 </script>
-
-</body>
-</html>
