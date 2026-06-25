@@ -651,8 +651,6 @@
 
   </div><!-- /results-panel -->
 
-</div>
-
   </div><!-- /tab-parser -->
 
   <div id="tab-invite" class="tab-panel">
@@ -802,6 +800,33 @@
   </div><!-- /tab-invite -->
 
 </div><!-- /wrapper -->
+
+<script>
+// Critical UI functions loaded BEFORE external library scripts
+// so tab switching works even if CDN scripts are slow/blocked
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+var currentMode = 'virtual';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeVirtual').classList.toggle('active', mode === 'virtual');
+  document.getElementById('modeInperson').classList.toggle('active', mode === 'inperson');
+  document.getElementById('inpersonFields').classList.toggle('visible', mode === 'inperson');
+}
+
+function toggleHMManager() {
+  var mgr = document.getElementById('hmManager');
+  var isOpen = mgr.classList.toggle('open');
+  if (isOpen) renderHMSavedList();
+}
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
@@ -1613,16 +1638,6 @@ function setScore(score) {
 
 
 // ============================================================
-// TAB SWITCHING
-// ============================================================
-function switchTab(tab, btn) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  btn.classList.add('active');
-}
-
-// ============================================================
 // HIRING MANAGER STORAGE (localStorage)
 // ============================================================
 const HM_KEY = 'dfi_hiring_managers';
@@ -1695,12 +1710,6 @@ function onHMSelect() {
   }
 }
 
-function toggleHMManager() {
-  const mgr = document.getElementById('hmManager');
-  const isOpen = mgr.classList.toggle('open');
-  if (isOpen) renderHMSavedList();
-}
-
 function saveNewHM() {
   const name  = document.getElementById('hm-new-name').value.trim();
   const title = document.getElementById('hm-new-title').value.trim();
@@ -1745,14 +1754,6 @@ document.addEventListener('DOMContentLoaded', renderHMSelect);
 // ============================================================
 // INTERVIEW INVITE GENERATOR
 // ============================================================
-let currentMode = 'virtual';
-
-function setMode(mode) {
-  currentMode = mode;
-  document.getElementById('modeVirtual').classList.toggle('active', mode === 'virtual');
-  document.getElementById('modeInperson').classList.toggle('active', mode === 'inperson');
-  document.getElementById('inpersonFields').classList.toggle('visible', mode === 'inperson');
-}
 
 function getVal(id) {
   return (document.getElementById(id) ? document.getElementById(id).value : '').trim();
@@ -1784,7 +1785,15 @@ function generateInvite() {
     const contactLine = contact
       ? 'Should you have any issues attending the session, kindly inform me at ' + contact + ' (' + (sender ? sender.split(' ')[0] : 'me') + ').'
       : 'Should you have any issues attending the session, kindly reach out to me.';
-    body = 'Hi there!\n\nInviting you for our ' + role + ' interview session with ' + hmLine + '.\n\nKindly ensure you are on time & dressed appropriately to the session.\n\n' + contactLine + '\n\nAll the best!\n\nCheers\n' + (sender || 'Fatin');
+    const bodyParts = [
+      'Hi there!',
+      'Inviting you for our ' + role + ' interview session with ' + hmLine + '.',
+      'Kindly ensure you are on time & dressed appropriately to the session.',
+      contactLine,
+      'All the best!',
+      'Cheers\n' + (sender || '[Your Name]')
+    ];
+    body = bodyParts.join('\n\n');
 
   } else {
     const room        = getVal('ig-room');
@@ -1797,11 +1806,20 @@ function generateInvite() {
     const officeRef = officelabel || 'our office';
     let venueBlock = '';
     if (room || building) venueBlock = '\n\nInterview Venue:\n' + (room ? room + '\n' : '') + (building || '');
+    // trim trailing newline from venueBlock if building is empty
+    venueBlock = venueBlock.trimEnd();
     const regLine = regfloor ? '\n\nKindly proceed to ' + regfloor + ' for registration upon arrival.' : '';
     const contactLine = contact
       ? 'Should you encounter any issues locating the venue or joining the interview, please feel free to contact me at ' + contact + ' (Whatsapp).'
       : 'Should you encounter any issues locating the venue, please feel free to reach out to me.';
-    body = 'Dear ' + (firstname || fullname) + '\n\nYou are invited to our <strong>' + role + '</strong> interview with ' + hmLine + ' at ' + officeRef + '.' + venueBlock + regLine + '\n\n' + contactLine + '\n\nAll the best!\n\nCheers\n' + (sender || 'Fatin Firdaus');
+    const bodyParts = [
+      'Dear ' + (firstname || fullname),
+      'You are invited to our <strong>' + role + '</strong> interview with ' + hmLine + ' at ' + officeRef + '.' + venueBlock + regLine,
+      contactLine,
+      'All the best!',
+      'Cheers\n' + (sender || '[Your Name]')
+    ];
+    body = bodyParts.join('\n\n');
   }
 
   document.getElementById('ig-title-text').textContent = meetingTitle;
